@@ -190,8 +190,10 @@ public class LocationTrackActivity extends AppCompatActivity implements GoogleAp
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                         Log.e(TAG,"Result is true");
-                        Intent locationSyncServiceIntent = new Intent(getApplicationContext(), LocationSyncService.class);
-                        startService(locationSyncServiceIntent);
+                        if(prefsHelper.getLocationTrackingStatus()) {
+                            Intent locationSyncServiceIntent = new Intent(getApplicationContext(), LocationSyncService.class);
+                            startService(locationSyncServiceIntent);
+                        }
                         break;
                     case Activity.RESULT_CANCELED:
                         Toast.makeText(getApplicationContext(), "Enable location services for seamless functioning", Toast.LENGTH_SHORT).show();
@@ -214,8 +216,10 @@ public class LocationTrackActivity extends AppCompatActivity implements GoogleAp
                                 !mGoogleApiClient.isConnected()) {
                             mGoogleApiClient.connect();
                             Log.e(TAG,"Result is true after resolving error");
-                            Intent locationSyncServiceIntent = new Intent(getApplicationContext(), LocationSyncService.class);
-                            startService(locationSyncServiceIntent);
+                            if(prefsHelper.getLocationTrackingStatus()) {
+                                Intent locationSyncServiceIntent = new Intent(getApplicationContext(), LocationSyncService.class);
+                                startService(locationSyncServiceIntent);
+                            }
                         }
                         break;
                     case Activity.RESULT_CANCELED:
@@ -307,8 +311,10 @@ public class LocationTrackActivity extends AppCompatActivity implements GoogleAp
                 final Status status = result.getStatus();
                 switch (status.getStatusCode()) {
                     case LocationSettingsStatusCodes.SUCCESS:
-                        Intent locationSyncServiceIntent = new Intent(getApplicationContext(), LocationSyncService.class);
-                        startService(locationSyncServiceIntent);
+                        if(prefsHelper.getLocationTrackingStatus()) {
+                            Intent locationSyncServiceIntent = new Intent(getApplicationContext(), LocationSyncService.class);
+                            startService(locationSyncServiceIntent);
+                        }
 
                         return;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
