@@ -332,7 +332,7 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
                 if(cursor.getString(COL_LOCATION_SPEED)!=null&&!"null".equals(cursor.getString(COL_LOCATION_SPEED)))
                     locationObject.put("speed",cursor.getFloat(COL_LOCATION_SPEED));
                 locationObject.put("gpsEnabled",(PrefsHelper.GPS_ENABLED.equals(cursor.getString(COL_LOCATION_GPS_ENABLED))));
-                batteryStatusObject.put("timestamp",cursor.getInt(COL_LOCATION_TIMESTAMP));
+                batteryStatusObject.put("timestamp",cursor.getInt(COL_LOCATION_BATTERY_STATUS_TIME));
                 batteryStatusObject.put("charge",cursor.getInt(COL_LOCATION_BATTERY_STATUS_REMAINING_TIME));
                 batteryStatusObject.put("chargingStatus",cursor.getString(COL_LOCATION_CHARGING_STATUS));
                 locationRequestObject.put("location",locationObject);
@@ -409,7 +409,7 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
                         if(cursor.getString(COL_LOCATION_SPEED)!=null&&!"null".equals(cursor.getString(COL_LOCATION_SPEED)))
                             locationObject.put("speed",cursor.getFloat(COL_LOCATION_SPEED));
                         locationObject.put("gpsEnabled",(PrefsHelper.GPS_ENABLED.equals(cursor.getString(COL_LOCATION_GPS_ENABLED))));
-                        batteryStatusObject.put("timestamp",cursor.getInt(COL_LOCATION_TIMESTAMP));
+                        batteryStatusObject.put("timestamp",cursor.getInt(COL_LOCATION_BATTERY_STATUS_TIME));
                         batteryStatusObject.put("charge",cursor.getInt(COL_LOCATION_BATTERY_STATUS_REMAINING_TIME));
                         batteryStatusObject.put("chargingStatus",cursor.getString(COL_LOCATION_CHARGING_STATUS));
                         locationRequestObject.put("location",locationObject);
