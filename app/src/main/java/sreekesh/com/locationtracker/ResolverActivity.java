@@ -35,9 +35,6 @@ public class ResolverActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // No content needed.
-        //setContentView(R.layout.activity_main);
-
         Intent i = getIntent();
 
         ConnectionResult result = i.getParcelableExtra(CONNECT_RESULT_KEY);

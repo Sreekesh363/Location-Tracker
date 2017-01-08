@@ -31,7 +31,6 @@ public class SplashActivity extends AppCompatActivity {
         GlideDrawableImageViewTarget imageViewTarget = new GlideDrawableImageViewTarget(splashImage);
         Glide.with(this).load(R.drawable.infinity).into(imageViewTarget);
 
-
         if(new PrefsHelper(this).getLocationTrackingStatus()) {
             Log.e(TAG, "Location Tracking enabled");
             Intent locationSyncServiceIntent = new Intent(getApplicationContext(), LocationSyncService.class);
@@ -39,7 +38,6 @@ public class SplashActivity extends AppCompatActivity {
         }else{
             Log.e(TAG, "Location Tracking disabled");
         }
-
         try {
             ScheduledFuture<?> countdown = scheduler.schedule(new Runnable() {
                 @Override
@@ -47,7 +45,7 @@ public class SplashActivity extends AppCompatActivity {
                     Intent mapIntent = new Intent(SplashActivity.this,LocationTrackActivity.class);
                     mapIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(mapIntent);
-                }}, 4000, TimeUnit.MILLISECONDS);
+                }}, 5000, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             Log.e(TAG, "onMapReady Exception:" + e.toString());
         }

@@ -3,6 +3,7 @@ package sreekesh.com.locationtracker.receiver;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import sreekesh.com.locationtracker.service.LocationSyncService;
 
@@ -17,7 +18,7 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        // start your service here
+        Log.e("BootCompleteReceiver","Boot Callback Received");
         context.startService(new Intent(context, LocationSyncService.class));
     }
 }

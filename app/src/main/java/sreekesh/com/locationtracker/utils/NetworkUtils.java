@@ -21,17 +21,16 @@ import java.io.IOException;
 
 public class NetworkUtils {
 
-    public static final String TAG = NetworkUtils.class
-            .getSimpleName();
+    public static final String TAG = NetworkUtils.class.getSimpleName();
 
-    public static String URL= "***REMOVED***";
+    public static String URL= "https://api.locus.sh/v1//client/test/user/candidate/location";
 
     public static synchronized HttpResponse makePostRequest(String uri, String json) {
         HttpResponse httpResponse = null;
         try {
             HttpPost httpPost = new HttpPost(uri);
             httpPost.setEntity(new StringEntity(json));
-            String credentials = "***REMOVED***";
+            String credentials = "test/candidate:c00e-4764";
             String credBase64 = Base64.encodeToString(credentials.getBytes(), Base64.DEFAULT).replace("\n", "");
             httpPost.setHeader("Accept", "application/json");
             httpPost.setHeader("Content-type", "application/json");

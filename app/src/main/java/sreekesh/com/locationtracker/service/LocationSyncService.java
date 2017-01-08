@@ -18,7 +18,6 @@ import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -88,23 +87,20 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
-//        Log.e(TAG,"Preference Change Got");
         if (s.equals(PrefsHelper.MAP_LOCATION_TRACK_STATUS)) {
             checkLocationTrackState(s);
         }
     }
 
     public void checkLocationTrackState(String s) {
-        boolean a = preferences.getBoolean(s, false);
+        boolean trackingStatus = preferences.getBoolean(s, false);
         mLocationRequest = new LocationRequest();
-        if (a) {
-//            Log.e(TAG, "tracking changed to true");
+        if (trackingStatus) {
             mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
             mLocationRequest.setInterval(TIME_THRESHOLD);
             mLocationRequest.setFastestInterval(10);
             startLocationUpdates();
         } else {
-//            Log.e(TAG, "tracking changed to false");
             stopLocationUpdates();
         }
     }
@@ -112,28 +108,21 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
         if (preferences.getBoolean(PrefsHelper.MAP_LOCATION_TRACK_STATUS, false)) {
-//            Log.e(TAG,"Setting Location Request Object");
             mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
             mLocationRequest.setInterval(LOCATION_UPDATE_TIME);
             mLocationRequest.setFastestInterval(1000);
             startLocationUpdates();
-        }else{
-//            Log.e(TAG,"Track Location is false");
         }
     }
 
     protected void startLocationUpdates() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-//            Log.e(TAG, "Starting Location Updates");
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-        }else{
-//            Log.e(TAG,"Permissions not granted");
         }
     }
 
     @Override
     public void onCreate() {
-//        Log.e(TAG, "starting location update service");
         buildGoogleApiClient();
         mGoogleApiClient.connect();
         preferences= getSharedPreferences(PrefsHelper.PREF_NAME,0);
@@ -148,7 +137,6 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
 
     @Override
     public void onConnected(Bundle bundle) {
-//        Log.e(TAG, "------------------On Connected got");
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             new Handler().postDelayed(new Runnable() {
                 @Override
@@ -159,9 +147,6 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
                     if (location != null) {
                         mLastLocation = location;
                         createLocationRequest();
-//                        Log.e("gotLocation", "lat:" + mLastLocation.getLatitude() + " and long:" + mLastLocation.getLongitude());
-                    } else {
-//                        Log.e("failLocation", "No Location.");
                     }
                 }
             },2000);
@@ -172,7 +157,6 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-//        Log.e(TAG, "location update service called");
         if(intent!=null && intent.getIntExtra(CONN_STATUS_KEY,0)==1){
             mResolvingError = false;
             if(!mGoogleApiClient.isConnected()){
@@ -185,7 +169,6 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
     @Override
     public void onDestroy() {
         super.onDestroy();
-//        Log.e(TAG, "On Destroy Called");
         stopLocationUpdates();
     }
 
@@ -209,16 +192,13 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
         boolean isSignificantlyNewer = timeDelta > TIME_THRESHOLD;
         boolean isSignificantlyOlder = timeDelta < -TIME_THRESHOLD;
         boolean isNewerForMorePrecision = timeDelta > TIME_THRESHOLD_FOR_PRECISION;
-        Log.e(TAG,"Checking Time:"+timeDelta);
 
         // If it's been more than two minutes since the current location, location is updated
         //      OR
         // If the new location is older than two minutes, it is discarded
         if (isSignificantlyNewer) {
-            Log.e(TAG,"more than two minutes since the current location");
             return true;
         } else if (isSignificantlyOlder) {
-            Log.e(TAG,"Significantly older");
             return false;
         }
 
@@ -235,10 +215,8 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
         //       OR
         //If accuracy is more that 25 and the location is 40 second newer than than the previous location, location is updated
         if (isMoreAccurate) {
-            Log.e(TAG,"More Accurate:"+accuracyDelta);
             return true;
         } else if (isNewerForMorePrecision && isLessAccurate) {
-            Log.e(TAG,"More Accurate for precision and is less accurate:"+accuracyDelta);
             return true;
         }
         return false;
@@ -255,7 +233,6 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
     @Override
     public void onLocationChanged(Location location) {
         if (isBetterLocation(location, mLastLocation)) {
-            Toast.makeText(getApplicationContext(),"Location Change from: "+location.getProvider()+":"+location.distanceTo(mLastLocation),Toast.LENGTH_LONG).show();
             mLastLocation=location;
             location.getProvider();
             location.getTime();
@@ -324,16 +301,8 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
             location_cv.put(Contract.LocationDataEntry.COLUMN_LOCATION_DATA_CHARGING_STATUS,chargingStatus);
             location_cv.put(Contract.LocationDataEntry.COLUMN_LOCATION_DATA_BATTERY_STATUS_REMAINING,batteryPct);
             location_cv.put(Contract.LocationDataEntry.COLUMN_LOCATION_DATA_BATTERY_STATUS_TIME,batteryStatusTime);
-//            Log.e(TAG,"///////////////////////////////////");
-//            Log.e(TAG,"Got Location change at :"+location.getTime()/1000+" location is: "+location.getLatitude()+":"+location.getLongitude());
-//            Log.e(TAG,"Location Provider:"+location.getProvider()+" : Location Accuracy:"+location.getAccuracy());
-//            Log.e(TAG,"Location Speed:"+location.getSpeed()+" : GPS Status:"+isGPSEnabled);
-//            Log.e(TAG,"Location Charging Status:"+chargingStatus+" : Remaining Time:"+batteryPct);
-//            Log.e(TAG,"************************************");
             getContentResolver().insert(Contract.LocationDataEntry.CONTENT_URI,location_cv);
             sendLocationUpdates();
-        }else {
-//            Log.e(TAG, "stale location update");
         }
     }
 
@@ -373,7 +342,6 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
                     locationDataArray.put(i,locationRequestObject);
                     i++;
                 } while (cursor.moveToNext());
-                Log.e(TAG,"Locations from DB:"+cursor.getCount());
                 RequestObject request= new RequestObject();
                 request.setTimestampOfCurrentProcessing(timeStampForFirstLocation);
                 request.setCurrentPosition(0);
@@ -428,7 +396,6 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
             if(params!=null) {
                 int timestampOfLocationToBeProcessed = params.getTimestampOfCurrentProcessing();
                 try {
-//                    Log.e(TAG, "Location Update Successful for TimeStamp:" + timestampOfLocationToBeProcessed);
                     getContentResolver().delete(Contract.LocationDataEntry.CONTENT_URI,
                             Contract.LocationDataEntry.COLUMN_LOCATION_DATA_TIMESTAMP + " = " + timestampOfLocationToBeProcessed,
                             null);
@@ -440,8 +407,6 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
                         params.setTimestampOfCurrentProcessing(updatedTimeStamp);
                         SubmitLocations submitLocations = new SubmitLocations();
                         submitLocations.execute(params);
-                    } else {
-                        Log.e(TAG, "Submitted all Locations:" + params.getTotalCount());
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

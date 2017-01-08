@@ -83,7 +83,7 @@ public class LocationContentProvider extends ContentProvider {
                         values
                 );
                 if (_id > 0) {
-                    retUri = Contract.LocationDataEntry.buildMapDataUri(_id);
+                    retUri = Contract.LocationDataEntry.buildLocationDataUri(_id);
                 } else {
                     throw new SQLException("Failed to insert row into:" + uri);
                 }

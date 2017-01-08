@@ -69,7 +69,6 @@ public class LocationTrackActivity extends AppCompatActivity implements GoogleAp
 
         if (ContextCompat.checkSelfPermission(LocationTrackActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(LocationTrackActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-            // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(LocationTrackActivity.this,
                     Manifest.permission.ACCESS_FINE_LOCATION) || ActivityCompat.shouldShowRequestPermissionRationale(LocationTrackActivity.this,
                     Manifest.permission.ACCESS_COARSE_LOCATION)) {
@@ -104,15 +103,9 @@ public class LocationTrackActivity extends AppCompatActivity implements GoogleAp
                     }
                 });
             } else {
-                // No explanation needed, we can request the permission.
-
                 ActivityCompat.requestPermissions(LocationTrackActivity.this,
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
                         MY_PERMISSIONS_REQUEST_LOCATION);
-
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
             }
         } else {
             if(mGoogleApiClient==null)
@@ -319,11 +312,7 @@ public class LocationTrackActivity extends AppCompatActivity implements GoogleAp
 
                         return;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                        // Location settings are not satisfied. But could be fixed by showing the user
-                        // a dialog.
                         try {
-                            // Show the dialog by calling startResolutionForResult(),
-                            // and check the result in onActivityResult().
                             status.startResolutionForResult(
                                     LocationTrackActivity.this,
                                     REQUEST_CHECK_SETTINGS);
@@ -332,8 +321,6 @@ public class LocationTrackActivity extends AppCompatActivity implements GoogleAp
                         }
                         break;
                     case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                        // Location settings are not satisfied. However, we have no way to fix the
-                        // settings so we won't show the dialog.
                         Toast.makeText(getApplicationContext(), "Location services not available. Please enable them for proceeding further.", Toast.LENGTH_SHORT).show();
                         break;
                 }

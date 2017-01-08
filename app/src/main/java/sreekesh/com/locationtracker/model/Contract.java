@@ -36,7 +36,7 @@ public class Contract {
         public static final String COLUMN_LOCATION_DATA_CHARGING_STATUS = "charging_status";
         public static final String COLUMN_LOCATION_DATA_BATTERY_STATUS_TIME = "battery_status_time";
 
-        public static final Uri buildMapDataUri(long _id){
+        public static final Uri buildLocationDataUri(long _id){
             return ContentUris.withAppendedId(CONTENT_URI, _id);
         }
     }
