@@ -189,7 +189,6 @@ public class LocationTrackActivity extends AppCompatActivity implements GoogleAp
             case REQUEST_CHECK_SETTINGS:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        Log.e(TAG,"Result is true");
                         if(prefsHelper.getLocationTrackingStatus()) {
                             Intent locationSyncServiceIntent = new Intent(getApplicationContext(), LocationSyncService.class);
                             startService(locationSyncServiceIntent);

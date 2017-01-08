@@ -36,7 +36,7 @@ public class NetworkUtils {
             httpPost.setHeader("Content-type", "application/json");
             httpPost.addHeader("Authorization", "Basic " + credBase64);
             HttpParams httpParams = new BasicHttpParams();
-            int timeoutConnection = 3000;
+            int timeoutConnection = 10000;
             HttpConnectionParams.setConnectionTimeout(httpParams, timeoutConnection);
             httpResponse = new DefaultHttpClient(httpParams).execute(httpPost);
         } catch (IOException e) {

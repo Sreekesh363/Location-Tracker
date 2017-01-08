@@ -28,7 +28,6 @@ import com.google.android.gms.location.LocationServices;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -98,8 +97,8 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
         mLocationRequest = new LocationRequest();
         if (trackingStatus) {
             mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-            mLocationRequest.setInterval(TIME_THRESHOLD);
-            mLocationRequest.setFastestInterval(10);
+            mLocationRequest.setInterval(LOCATION_UPDATE_TIME);
+            mLocationRequest.setFastestInterval(1000);
             startLocationUpdates();
         } else {
             stopLocationUpdates();
@@ -126,6 +125,7 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
     public void onCreate() {
         buildGoogleApiClient();
         mGoogleApiClient.connect();
+        new PrefsHelper(getApplicationContext()).setUpdatingLocationStatus(false);
         preferences= getSharedPreferences(PrefsHelper.PREF_NAME,0);
         preferences.registerOnSharedPreferenceChangeListener(this);
         super.onCreate();
@@ -152,8 +152,6 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
                     }
                 }
             },2000);
-        }else{
-            Log.e(TAG,"Permission not granted in onConnected");
         }
     }
 
@@ -305,7 +303,9 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
             location_cv.put(Contract.LocationDataEntry.COLUMN_LOCATION_DATA_BATTERY_STATUS_REMAINING,batteryPct);
             location_cv.put(Contract.LocationDataEntry.COLUMN_LOCATION_DATA_BATTERY_STATUS_TIME,batteryStatusTime);
             getContentResolver().insert(Contract.LocationDataEntry.CONTENT_URI,location_cv);
-            sendLocationUpdates();
+            if(!(new PrefsHelper(getApplicationContext()).getUpdatingLocationStatus())) {
+                sendLocationUpdates();
+            }
         }
     }
 
@@ -317,39 +317,29 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
                 Contract.LocationDataEntry.COLUMN_LOCATION_DATA_TIMESTAMP+" DESC"
         );
         if (cursor != null && cursor.moveToFirst()) {
-            int i = 0;
-            int timeStampForFirstLocation = 0;
             try{
-                JSONArray locationDataArray = new JSONArray();
-                do {
-                    JSONObject locationObject = new JSONObject();
-                    JSONObject batteryStatusObject = new JSONObject();
-                    JSONObject locationRequestObject = new JSONObject();
-                    locationObject.put("lat",cursor.getDouble(COL_LOCATION_LATITUDE));
-                    locationObject.put("lng",cursor.getDouble(COL_LOCATION_LONGITUDE));
-                    locationObject.put("timestamp",cursor.getInt(COL_LOCATION_TIMESTAMP));
-                    if(i==0)
-                        timeStampForFirstLocation = cursor.getInt(COL_LOCATION_TIMESTAMP);
-                    if(cursor.getString(COL_LOCATION_PROVIDER)!=null&&!"null".equals(cursor.getString(COL_LOCATION_PROVIDER)))
-                        locationObject.put("provider",cursor.getString(COL_LOCATION_PROVIDER));
-                    if(cursor.getString(COL_LOCATION_ACCURACY)!=null&&!"null".equals(cursor.getString(COL_LOCATION_ACCURACY)))
-                        locationObject.put("accuracy",cursor.getFloat(COL_LOCATION_ACCURACY));
-                    if(cursor.getString(COL_LOCATION_SPEED)!=null&&!"null".equals(cursor.getString(COL_LOCATION_SPEED)))
-                        locationObject.put("speed",cursor.getFloat(COL_LOCATION_SPEED));
-                    locationObject.put("gpsEnabled",(PrefsHelper.GPS_ENABLED.equals(cursor.getString(COL_LOCATION_GPS_ENABLED))));
-                    batteryStatusObject.put("timestamp",cursor.getInt(COL_LOCATION_TIMESTAMP));
-                    batteryStatusObject.put("charge",cursor.getInt(COL_LOCATION_BATTERY_STATUS_REMAINING_TIME));
-                    batteryStatusObject.put("chargingStatus",cursor.getString(COL_LOCATION_CHARGING_STATUS));
-                    locationRequestObject.put("location",locationObject);
-                    locationRequestObject.put("batteryStatus",batteryStatusObject);
-                    locationDataArray.put(i,locationRequestObject);
-                    i++;
-                } while (cursor.moveToNext());
+                JSONObject locationObject = new JSONObject();
+                JSONObject batteryStatusObject = new JSONObject();
+                JSONObject locationRequestObject = new JSONObject();
+                locationObject.put("lat",cursor.getDouble(COL_LOCATION_LATITUDE));
+                locationObject.put("lng",cursor.getDouble(COL_LOCATION_LONGITUDE));
+                locationObject.put("timestamp",cursor.getInt(COL_LOCATION_TIMESTAMP));
+                int timeStampForFirstLocation = cursor.getInt(COL_LOCATION_TIMESTAMP);
+                if(cursor.getString(COL_LOCATION_PROVIDER)!=null&&!"null".equals(cursor.getString(COL_LOCATION_PROVIDER)))
+                    locationObject.put("provider",cursor.getString(COL_LOCATION_PROVIDER));
+                if(cursor.getString(COL_LOCATION_ACCURACY)!=null&&!"null".equals(cursor.getString(COL_LOCATION_ACCURACY)))
+                    locationObject.put("accuracy",cursor.getFloat(COL_LOCATION_ACCURACY));
+                if(cursor.getString(COL_LOCATION_SPEED)!=null&&!"null".equals(cursor.getString(COL_LOCATION_SPEED)))
+                    locationObject.put("speed",cursor.getFloat(COL_LOCATION_SPEED));
+                locationObject.put("gpsEnabled",(PrefsHelper.GPS_ENABLED.equals(cursor.getString(COL_LOCATION_GPS_ENABLED))));
+                batteryStatusObject.put("timestamp",cursor.getInt(COL_LOCATION_TIMESTAMP));
+                batteryStatusObject.put("charge",cursor.getInt(COL_LOCATION_BATTERY_STATUS_REMAINING_TIME));
+                batteryStatusObject.put("chargingStatus",cursor.getString(COL_LOCATION_CHARGING_STATUS));
+                locationRequestObject.put("location",locationObject);
+                locationRequestObject.put("batteryStatus",batteryStatusObject);
                 RequestObject request= new RequestObject();
                 request.setTimestampOfCurrentProcessing(timeStampForFirstLocation);
-                request.setCurrentPosition(0);
-                request.setTotalCount(cursor.getCount());
-                request.setLocationArray(locationDataArray);
+                request.setLocationObject(locationRequestObject);
                 SubmitLocations submitLocations = new SubmitLocations();
                 submitLocations.execute(request);
             } catch (JSONException e) {
@@ -360,27 +350,24 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
         }
     }
 
-    public class SubmitLocations extends AsyncTask<RequestObject, Void, RequestObject> {
+    public class SubmitLocations extends AsyncTask<RequestObject, Void, Integer> {
 
         @Override
         protected void onPreExecute() {
+            new PrefsHelper(getApplicationContext()).setUpdatingLocationStatus(true);
             super.onPreExecute();
         }
 
         @Override
-        protected RequestObject doInBackground(RequestObject... params) {
+        protected Integer doInBackground(RequestObject... params) {
 
             try {
                 RequestObject request = params[0];
-                JSONArray locationArray = request.getLocationArray();
-                int positionToSend = request.getCurrentPosition();
-
-                JSONObject locationObject = (JSONObject) locationArray.get(positionToSend);
-                HttpResponse response = NetworkUtils.makePostRequest(NetworkUtils.URL, locationObject.toString());
+                HttpResponse response = NetworkUtils.makePostRequest(NetworkUtils.URL, request.getLocationObject().toString());
                 if (response != null && response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                     if(firstServerUpdate)
                         firstServerUpdate=false;
-                    return request;
+                    return request.getTimestampOfCurrentProcessing();
                 }else if(response!=null){
                     Log.e(TAG,"Error:"+response.getStatusLine().getStatusCode());
                     cancel(true);
@@ -394,42 +381,69 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
         }
 
         @Override
-        protected void onPostExecute(RequestObject params) {
-            super.onPostExecute(params);
-            if(params!=null) {
-                int timestampOfLocationToBeProcessed = params.getTimestampOfCurrentProcessing();
+        protected void onPostExecute(Integer time) {
+            super.onPostExecute(time);
+            if(time!=null) {
                 try {
                     getContentResolver().delete(Contract.LocationDataEntry.CONTENT_URI,
-                            Contract.LocationDataEntry.COLUMN_LOCATION_DATA_TIMESTAMP + " = " + timestampOfLocationToBeProcessed,
+                            Contract.LocationDataEntry.COLUMN_LOCATION_DATA_TIMESTAMP + " = " + time,
                             null);
-                    if (params.getCurrentPosition() + 1 < params.getTotalCount()) {
-                        JSONObject currentObject = (JSONObject) params.getLocationArray().get(params.getCurrentPosition() + 1);
-                        int updatedTimeStamp = currentObject.getJSONObject("location").getInt("timestamp");
-                        int positionToSend = params.getCurrentPosition() + 1;
-                        params.setCurrentPosition(positionToSend);
-                        params.setTimestampOfCurrentProcessing(updatedTimeStamp);
+                    Cursor cursor = getContentResolver().query(Contract.LocationDataEntry.CONTENT_URI,
+                            LOCATION_DATA_PROJECTION,
+                            null,
+                            null,
+                            Contract.LocationDataEntry.COLUMN_LOCATION_DATA_TIMESTAMP+" DESC"
+                    );
+                    if (cursor != null && cursor.moveToFirst()) {
+                        JSONObject locationObject = new JSONObject();
+                        JSONObject batteryStatusObject = new JSONObject();
+                        JSONObject locationRequestObject = new JSONObject();
+                        locationObject.put("lat",cursor.getDouble(COL_LOCATION_LATITUDE));
+                        locationObject.put("lng",cursor.getDouble(COL_LOCATION_LONGITUDE));
+                        locationObject.put("timestamp",cursor.getInt(COL_LOCATION_TIMESTAMP));
+                        int timeStampForFirstLocation = cursor.getInt(COL_LOCATION_TIMESTAMP);
+                        if(cursor.getString(COL_LOCATION_PROVIDER)!=null&&!"null".equals(cursor.getString(COL_LOCATION_PROVIDER)))
+                            locationObject.put("provider",cursor.getString(COL_LOCATION_PROVIDER));
+                        if(cursor.getString(COL_LOCATION_ACCURACY)!=null&&!"null".equals(cursor.getString(COL_LOCATION_ACCURACY)))
+                            locationObject.put("accuracy",cursor.getFloat(COL_LOCATION_ACCURACY));
+                        if(cursor.getString(COL_LOCATION_SPEED)!=null&&!"null".equals(cursor.getString(COL_LOCATION_SPEED)))
+                            locationObject.put("speed",cursor.getFloat(COL_LOCATION_SPEED));
+                        locationObject.put("gpsEnabled",(PrefsHelper.GPS_ENABLED.equals(cursor.getString(COL_LOCATION_GPS_ENABLED))));
+                        batteryStatusObject.put("timestamp",cursor.getInt(COL_LOCATION_TIMESTAMP));
+                        batteryStatusObject.put("charge",cursor.getInt(COL_LOCATION_BATTERY_STATUS_REMAINING_TIME));
+                        batteryStatusObject.put("chargingStatus",cursor.getString(COL_LOCATION_CHARGING_STATUS));
+                        locationRequestObject.put("location",locationObject);
+                        locationRequestObject.put("batteryStatus",batteryStatusObject);
+                        RequestObject request= new RequestObject();
+                        request.setTimestampOfCurrentProcessing(timeStampForFirstLocation);
+                        request.setLocationObject(locationRequestObject);
                         SubmitLocations submitLocations = new SubmitLocations();
-                        submitLocations.execute(params);
+                        submitLocations.execute(request);
+                        cursor.close();
+                    }else{
+                        new PrefsHelper(getApplicationContext()).setUpdatingLocationStatus(false);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                     Log.e(TAG, e.toString());
+                    new PrefsHelper(getApplicationContext()).setUpdatingLocationStatus(false);
                 }
+            }else{
+                new PrefsHelper(getApplicationContext()).setUpdatingLocationStatus(false);
             }
         }
 
-
         @Override
-        protected void onCancelled(RequestObject params) {
-            super.onCancelled(params);
-            Log.e(TAG,"Failed");
+        protected void onCancelled(Integer status) {
+            super.onCancelled(status);
+            new PrefsHelper(getApplicationContext()).setUpdatingLocationStatus(false);
         }
     }
 
     protected void stopLocationUpdates() {
         LocationServices.FusedLocationApi.removeLocationUpdates(
                 mGoogleApiClient, this);
-    }
+        new PrefsHelper(getApplicationContext()).setUpdatingLocationStatus(false);}
 
     @Override
     public void onConnectionSuspended(int i) {

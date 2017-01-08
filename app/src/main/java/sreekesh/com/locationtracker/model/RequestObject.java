@@ -1,32 +1,14 @@
 package sreekesh.com.locationtracker.model;
 
-import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * Created by sree on 8/1/17.
  */
 
 public class RequestObject {
-    private int currentPosition;
-    private int totalCount;
     private int timestampOfCurrentProcessing;
-    private JSONArray locationArray;
-
-    public int getCurrentPosition() {
-        return currentPosition;
-    }
-
-    public void setCurrentPosition(int currentPosition) {
-        this.currentPosition = currentPosition;
-    }
-
-    public int getTotalCount() {
-        return totalCount;
-    }
-
-    public void setTotalCount(int totalCount) {
-        this.totalCount = totalCount;
-    }
+    private JSONObject locationObject;
 
     public int getTimestampOfCurrentProcessing() {
         return timestampOfCurrentProcessing;
@@ -36,11 +18,11 @@ public class RequestObject {
         this.timestampOfCurrentProcessing = timestampOfCurrentProcessing;
     }
 
-    public JSONArray getLocationArray() {
-        return locationArray;
+    public JSONObject getLocationObject() {
+        return locationObject;
     }
 
-    public void setLocationArray(JSONArray locationArray) {
-        this.locationArray = locationArray;
+    public void setLocationObject(JSONObject locationObject) {
+        this.locationObject = locationObject;
     }
 }

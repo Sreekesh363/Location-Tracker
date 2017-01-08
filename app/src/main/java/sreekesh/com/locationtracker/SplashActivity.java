@@ -32,11 +32,8 @@ public class SplashActivity extends AppCompatActivity {
         Glide.with(this).load(R.drawable.infinity).into(imageViewTarget);
 
         if(new PrefsHelper(this).getLocationTrackingStatus()) {
-            Log.e(TAG, "Location Tracking enabled");
             Intent locationSyncServiceIntent = new Intent(getApplicationContext(), LocationSyncService.class);
             startService(locationSyncServiceIntent);
-        }else{
-            Log.e(TAG, "Location Tracking disabled");
         }
         try {
             ScheduledFuture<?> countdown = scheduler.schedule(new Runnable() {

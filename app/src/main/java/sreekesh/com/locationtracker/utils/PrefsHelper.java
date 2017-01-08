@@ -11,6 +11,7 @@ public class PrefsHelper {
 
     //Preference Variables
     public static final String MAP_LOCATION_TRACK_STATUS = "location_track_status";
+    public static final String UPDATING_LOCATION_STATUS = "updating_location";
     public static final String PREF_NAME = "LocationPreferenceFile";
 
     //Constants
@@ -39,8 +40,17 @@ public class PrefsHelper {
         return pref.getBoolean(MAP_LOCATION_TRACK_STATUS, false);
     }
 
-    public void setLocationTrackingStatus(Boolean seqId){
-        editor.putBoolean(MAP_LOCATION_TRACK_STATUS, seqId);
+    public void setLocationTrackingStatus(Boolean status){
+        editor.putBoolean(MAP_LOCATION_TRACK_STATUS, status);
+        editor.apply();
+    }
+
+    public Boolean getUpdatingLocationStatus(){
+        return pref.getBoolean(UPDATING_LOCATION_STATUS, false);
+    }
+
+    public void setUpdatingLocationStatus(Boolean status){
+        editor.putBoolean(UPDATING_LOCATION_STATUS, status);
         editor.apply();
     }
 }
