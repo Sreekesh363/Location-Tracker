@@ -13,6 +13,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -87,13 +88,12 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
     private static final String DIALOG_TAG = "dialog_tag_error_play_services";
 
     GoogleApiClient mGoogleApiClient;
-    private static final int TWO_MINUTES = 1000;
+    private static final int TWO_MINUTES = 3000;
     private static final float MIN_BOUND_METERS = 10;
     boolean firstServerUpdate = true;
     Location mLastLocation;
     LocationRequest mLocationRequest;
     private boolean mResolvingError = false;
-    private ErrorDialogFragment mDialogFragment;
 
     public LocationSyncService() {
     }
@@ -111,7 +111,7 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
         mLocationRequest = new LocationRequest();
         if (a) {
             Log.e(TAG, "tracking changed to true");
-            mLocationRequest.setPriority(LocationRequest.PRIORITY_LOW_POWER);
+            mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
             mLocationRequest.setInterval(TWO_MINUTES);
             mLocationRequest.setFastestInterval(1000);
             startLocationUpdates();
@@ -125,7 +125,7 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
         mLocationRequest = new LocationRequest();
         if (preferences.getBoolean(PrefsHelper.MAP_LOCATION_TRACK_STATUS, false)) {
             Log.e(TAG,"Setting Location Request Object");
-            mLocationRequest.setPriority(LocationRequest.PRIORITY_LOW_POWER);
+            mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
             mLocationRequest.setInterval(TWO_MINUTES);
             mLocationRequest.setFastestInterval(1000);
             startLocationUpdates();
@@ -162,13 +162,26 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
     public void onConnected(Bundle bundle) {
         Log.e(TAG, "------------------On Connected got");
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Location location = null;
+                    if (ActivityCompat.checkSelfPermission(LocationSyncService.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(LocationSyncService.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+                        location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+                    if (location != null) {
+                        mLastLocation = location;
+                        createLocationRequest();
+                        Log.e("getLocation", "lat:" + mLastLocation.getLatitude() + " and long:" + mLastLocation.getLongitude());
+                    } else {
+                        Log.e("failLocation", "No Location.");
+                    }
+                }
+            },2000);
             if(mLastLocation!=null) {
                 Log.e(TAG, "Last Location is: " + mLastLocation.getLatitude() + ":" + mLastLocation.getLongitude() + ": Provider:" + mLastLocation.getProvider());
             }else {
                 Log.e(TAG, "Last Location is null");
             }
-            createLocationRequest();
         }else{
             Log.e(TAG,"Permission not granted in onConnected");
         }
@@ -178,6 +191,7 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.e(TAG, "location update service called");
         if(intent!=null && intent.getIntExtra(CONN_STATUS_KEY,0)==1){
+            mResolvingError = false;
             if(!mGoogleApiClient.isConnected()){
                 mGoogleApiClient.connect();
             }
@@ -467,27 +481,13 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.e(TAG,"Connection Failed");
         if (mResolvingError) {
-            // Already attempting to resolve an error.
+            Log.e(TAG,"Resolving Error");
         } else {
             mResolvingError = true;
             Intent i = new Intent(this, ResolverActivity.class);
             i.putExtra(ResolverActivity.CONNECT_RESULT_KEY, connectionResult);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(i);
-        }
-    }
-
-    public static class ErrorDialogFragment extends DialogFragment {
-
-        public ErrorDialogFragment() {
-        }
-
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            int errorCode = this.getArguments().getInt(DIALOG_ERROR);
-            return GooglePlayServicesUtil.getErrorDialog(errorCode,
-                    this.getActivity(), REQUEST_RESOLVE_ERROR);
         }
     }
 }
