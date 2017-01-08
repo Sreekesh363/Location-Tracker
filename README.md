@@ -11,10 +11,10 @@ _____________________________________________________________
 	
 	Note: The location requests will be fired every 5 seconds and the updating or tracking is based on the following.
 
-  a.) If the last location has been updated before 2 minutes.
-  b.) If the location displacement is more that 100m than the previous location.
-  c.) If the accuracy of the new location is more than 100m.
-  d.) If the accuracy of the new location is more than 25m and the last location updated time is before 40 seconds.
+  * If the last location has been updated before 2 minutes.
+  * If the location displacement is more that 100m than the previous location.
+  * If the accuracy of the new location is more than 100m.
+  * If the accuracy of the new location is more than 25m and the last location updated time is before 40 seconds.
 
 4. If the network has been lost or the location update to the server is failed, then the location is saved and the location history is resend once the network is resumed.
 
