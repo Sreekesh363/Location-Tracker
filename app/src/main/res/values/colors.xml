@@ -7,4 +7,5 @@
 
     <color name="snackbar_teel">#1DA1F3</color>
     <color name="snackbar_yellow">#ffffff00</color>
+    <color name="primary_text_colour">#000000</color>
 </resources>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:paddingTop="10dp"
+    android:paddingLeft="15dp"
+    android:paddingStart="15dp"
+    android:paddingRight="15dp"
+    android:paddingEnd="15dp"
+    android:paddingBottom="10dp"
+    android:background="@drawable/alert_dialogs_border"
+    android:layout_gravity="center_vertical"
+    android:layout_marginBottom="20dp"
+    tools:ignore="MissingPrefix">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:gravity="bottom"
+        android:paddingBottom="3dp"
+        android:layout_marginTop="20dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:textSize="16sp"
+            android:layout_height="wrap_content"
+            android:id="@+id/dialog_head"
+            android:textColor="@color/primary_text_colour"
+            android:gravity="center"
+            fontPath="fonts/SourceSansPro-Semibold.ttf"
+            android:text="Action Required"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:textSize="14sp"
+            android:layout_height="wrap_content"
+            android:autoLink="all"
+            android:paddingTop="10dp"
+            android:id="@+id/dialog_body"
+            android:textColor="@color/primary_text_colour"
+            android:gravity="center"
+            android:text="@string/enable_location_permission"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_gravity="center">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:textColor="#000000"
+            android:background="#ffdf3a"
+            android:text="OK"
+            android:clickable="true"
+            android:id="@+id/ok_button"/>
+
+    </LinearLayout>
+
+</LinearLayout>
