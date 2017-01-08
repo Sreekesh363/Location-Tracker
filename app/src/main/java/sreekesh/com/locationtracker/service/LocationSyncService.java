@@ -18,6 +18,7 @@ import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -146,6 +147,7 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
                         location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
                     if (location != null) {
                         mLastLocation = location;
+                        onLocationChanged(location);
                         createLocationRequest();
                     }
                 }
@@ -233,6 +235,7 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
     @Override
     public void onLocationChanged(Location location) {
         if (isBetterLocation(location, mLastLocation)) {
+            Toast.makeText(getApplicationContext(),"Location Update from :"+location.getProvider(),Toast.LENGTH_LONG).show();
             mLastLocation=location;
             location.getProvider();
             location.getTime();
@@ -311,7 +314,7 @@ public class LocationSyncService extends Service implements GoogleApiClient.Conn
                 LOCATION_DATA_PROJECTION,
                 null,
                 null,
-                null
+                Contract.LocationDataEntry.COLUMN_LOCATION_DATA_TIMESTAMP+" DESC"
         );
         if (cursor != null && cursor.moveToFirst()) {
             int i = 0;
